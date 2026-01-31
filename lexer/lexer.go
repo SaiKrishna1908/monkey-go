@@ -1,0 +1,179 @@
+package lexer
+
+import "github.com/saikrishna1908/monkey/token"
+
+type Lexer struct {
+	input        string
+	position     int  // current position in the input (points to current char)
+	readPosition int  // current reading positon in input (after current char)
+	ch           byte // current char under examination
+}
+
+func New(input string) *Lexer {
+	l := &Lexer{
+		input: input,
+	}
+	l.readChar()
+	return l
+}
+
+/*
+Reads a character a position `readPosition` and increments it
+*/
+func (l *Lexer) readChar() {
+	if l.readPosition >= len(l.input) {
+		l.ch = 0
+	} else {
+		l.ch = l.input[l.readPosition]
+	}
+	l.position = l.readPosition
+	l.readPosition += 1
+}
+
+func newToken(tokenType token.TokenType, ch byte) *token.Token {
+	return &token.Token{
+		Type:    tokenType,
+		Literal: string(ch),
+	}
+}
+
+func (l *Lexer) NextToken() *token.Token {
+	var tok *token.Token
+
+	l.skipWhiteSpace()
+
+	switch l.ch {
+	case '=':
+		// TODO: this logic can be extracted
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = &token.Token{
+				Type:    token.EQL,
+				Literal: string(ch) + string(l.ch),
+			}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
+	case '+':
+		tok = newToken(token.PLUS, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '!':
+		// TODO: this logic can be extracted
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = &token.Token{
+				Type:    token.NE,
+				Literal: string(ch) + string(l.ch),
+			}
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '<':
+		// TODO: this logic can be extracted
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = &token.Token{
+				Type:    token.LTE,
+				Literal: string(ch) + string(l.ch),
+			}
+		} else {
+			tok = newToken(token.LT, l.ch)
+		}
+	case '>':
+		// TODO: this logic can be extracted
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			tok = &token.Token{
+				Type:    token.GTE,
+				Literal: string(ch) + string(l.ch),
+			}
+		} else {
+			tok = newToken(token.GT, l.ch)
+		}
+	case ',':
+		tok = newToken(token.COMMA, l.ch)
+	case ';':
+		tok = newToken(token.SEMICOLON, l.ch)
+	case '(':
+		tok = newToken(token.LPAREN, l.ch)
+	case ')':
+		tok = newToken(token.RPAREN, l.ch)
+	case '{':
+		tok = newToken(token.LBRACE, l.ch)
+	case '}':
+		tok = newToken(token.RBRACE, l.ch)
+	case 0:
+		tok = &token.Token{
+			Type:    token.EOF,
+			Literal: "",
+		}
+	default:
+		if isLetter(l.ch) {
+			identifier := l.readIdentifier()
+			return &token.Token{
+				Type:    token.LookupIdent(identifier),
+				Literal: identifier,
+			}
+		} else if isDigit(l.ch) {
+
+			return &token.Token{
+				Type:    token.INT,
+				Literal: l.readNumber(),
+			}
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
+	}
+
+	l.readChar()
+	return tok
+}
+
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+
+	return l.input[position:l.position]
+}
+
+func isDigit(b byte) bool {
+	return (b >= '0') && (b <= '9')
+}
+
+func (l *Lexer) skipWhiteSpace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_') || (c == '$')
+}
+
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
