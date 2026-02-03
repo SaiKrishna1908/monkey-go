@@ -30,15 +30,15 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-func newToken(tokenType token.TokenType, ch byte) *token.Token {
-	return &token.Token{
+func newToken(tokenType token.TokenType, ch byte) token.Token {
+	return token.Token{
 		Type:    tokenType,
 		Literal: string(ch),
 	}
 }
 
-func (l *Lexer) NextToken() *token.Token {
-	var tok *token.Token
+func (l *Lexer) NextToken() token.Token {
+	var tok token.Token
 
 	l.skipWhiteSpace()
 
@@ -48,7 +48,7 @@ func (l *Lexer) NextToken() *token.Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = &token.Token{
+			tok = token.Token{
 				Type:    token.EQL,
 				Literal: string(ch) + string(l.ch),
 			}
@@ -66,7 +66,7 @@ func (l *Lexer) NextToken() *token.Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = &token.Token{
+			tok = token.Token{
 				Type:    token.NE,
 				Literal: string(ch) + string(l.ch),
 			}
@@ -80,7 +80,7 @@ func (l *Lexer) NextToken() *token.Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = &token.Token{
+			tok = token.Token{
 				Type:    token.LTE,
 				Literal: string(ch) + string(l.ch),
 			}
@@ -92,7 +92,7 @@ func (l *Lexer) NextToken() *token.Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = &token.Token{
+			tok = token.Token{
 				Type:    token.GTE,
 				Literal: string(ch) + string(l.ch),
 			}
@@ -112,20 +112,20 @@ func (l *Lexer) NextToken() *token.Token {
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
 	case 0:
-		tok = &token.Token{
+		tok = token.Token{
 			Type:    token.EOF,
 			Literal: "",
 		}
 	default:
 		if isLetter(l.ch) {
 			identifier := l.readIdentifier()
-			return &token.Token{
+			return token.Token{
 				Type:    token.LookupIdent(identifier),
 				Literal: identifier,
 			}
 		} else if isDigit(l.ch) {
 
-			return &token.Token{
+			return token.Token{
 				Type:    token.INT,
 				Literal: l.readNumber(),
 			}
