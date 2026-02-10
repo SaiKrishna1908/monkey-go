@@ -6,11 +6,13 @@ type Node interface {
 	TokenLiteral() string
 }
 
+// A statement is something that does "not" return anything
 type Statement interface {
 	Node
 	statementNode()
 }
 
+// A expression is something that returns a value after evaluation
 type Expression interface {
 	Node
 	expressionNode()
@@ -28,6 +30,17 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+type Identifier struct {
+	Token token.Token
+	Value string
+}
+
+func (i *Identifier) expressionNode() {}
+
+func (i *Identifier) TokenLiteral() string {
+	return i.Token.Literal
+}
+
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier
@@ -40,13 +53,13 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
-type Identifier struct {
-	Token token.Token
-	Value string
+type ReturnStatement struct {
+	Token       token.Token
+	ReturnValue Expression
 }
 
-func (i *Identifier) expressionNode() {}
+func (rs *ReturnStatement) statementNode() {}
 
-func (i *Identifier) TokenLiteral() string {
-	return i.Token.Literal
+func (rs *ReturnStatement) TokenLiteral() string {
+	return rs.Token.Literal
 }
