@@ -1,9 +1,14 @@
 package ast
 
-import "github.com/saikrishna1908/monkey/token"
+import (
+	"bytes"
+
+	"github.com/saikrishna1908/monkey/token"
+)
 
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 // A statement is something that does "not" return anything
@@ -30,6 +35,19 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
+/*
+Identifier implements Expression
+*/
 type Identifier struct {
 	Token token.Token
 	Value string
@@ -41,6 +59,33 @@ func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
+func (i *Identifier) String() string {
+	return i.Value
+}
+
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode() {}
+
+func (i *IntegerLiteral) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+func (i *IntegerLiteral) String() string {
+	return i.TokenLiteral()
+}
+
+/*
+let x := 5
+
+	LetStatement {
+	    Token: {Type: token.LET,   Literal: "let"},
+	    Name:  {Token: {Type: token.IDENT, Literal: "x"}, Value: "x"},
+	}
+*/
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier
@@ -53,6 +98,26 @@ func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
 
+func (ls *LetStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ls.TokenLiteral() + " ")
+
+	out.WriteString(ls.Name.String())
+	out.WriteString(" = ")
+	out.WriteString(ls.Value.String())
+	out.WriteString(";")
+	return out.String()
+}
+
+/*
+return i
+
+	ReturnStatement {
+	    Token: {Type: token.RETURN,   Literal: "return"},
+	    ReturnValue:  <exprn>,
+	}
+*/
 type ReturnStatement struct {
 	Token       token.Token
 	ReturnValue Expression
@@ -62,4 +127,35 @@ func (rs *ReturnStatement) statementNode() {}
 
 func (rs *ReturnStatement) TokenLiteral() string {
 	return rs.Token.Literal
+}
+
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(rs.TokenLiteral() + " ")
+
+	if rs.ReturnValue != nil {
+		out.WriteString(rs.ReturnValue.String())
+	}
+
+	out.WriteString(";")
+
+	return out.String()
+}
+
+type ExpressionStatement struct {
+	Token      token.Token
+	Expression Expression
+}
+
+func (es *ExpressionStatement) statementNode() {}
+
+func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
+
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+
+	return ""
 }

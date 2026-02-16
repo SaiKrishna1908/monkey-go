@@ -2,11 +2,23 @@ package token
 
 type TokenType string
 
+/*
+A token produced by the Lexer.
+
+example:
+Token {Type: token.LET, "let"}
+Token {Type: token.IDENT, "foobar"}
+Token {Type: token.INT, "10"}
+Token {Type: token.ASSIGN, "="}
+*/
 type Token struct {
 	Type    TokenType
 	Literal string
 }
 
+/*
+Different Token Types supported by monkey
+*/
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
