@@ -5,8 +5,8 @@ import "github.com/saikrishna1908/monkey/token"
 type Lexer struct {
 	input        string
 	position     int  // current position in the input (points to current char)
-	readPosition int  // current reading positon in input (after current char)
 	ch           byte // current char under examination
+	readPosition int  // current reading positon in input (after current char)
 }
 
 func New(input string) *Lexer {

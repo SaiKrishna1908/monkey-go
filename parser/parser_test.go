@@ -272,6 +272,70 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 }
 
+func TestOperationPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"a*b",
+			"(a*b)",
+		},
+		{
+			"a+b*d+c/d",
+			"((a+(b*d))+(c/d))",
+		},
+		{
+			"-a*b",
+			"((-a)*b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a+b+c",
+			"((a+b)+c)",
+		},
+		{
+			"a+b-c",
+			"((a+b)-c)",
+		},
+		{
+			"a*b*c",
+			"((a*b)*c)",
+		},
+		{
+			"a*b/c",
+			"((a*b)/c)",
+		},
+		{
+			"a+b/c",
+			"(a+(b/c))",
+		},
+		{
+			"a+b*c+d/e-f",
+			"(((a+(b*c))+(d/e))-f)",
+		},
+		{
+			"3+4;-5*5",
+			"(3+4)((-5)*5)",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParseErrors(t, p)
+
+		actual := program.String()
+		if actual != tt.expected {
+			t.Errorf("expected=%q, got=%q", tt.expected, actual)
+		}
+	}
+}
+
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	integ, ok := il.(*ast.IntegerLiteral)
 
