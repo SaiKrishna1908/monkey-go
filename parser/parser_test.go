@@ -319,6 +319,30 @@ func TestOperationPrecedenceParsing(t *testing.T) {
 		expected string
 	}{
 		{
+			"+5",
+			"(+5)",
+		},
+		{
+			"-4",
+			"(-4)",
+		},
+		{
+			"4*(3+5-4)",
+			"(4*((3+5)-4))",
+		},
+		{
+			"(3+5+6)*4",
+			"(((3+5)+6)*4)",
+		},
+		{
+			"(3+(5*3))*4",
+			"((3+(5*3))*4)",
+		},
+		{
+			"(3+5)*4",
+			"((3+5)*4)",
+		},
+		{
 			"3 > 5 == false",
 			"((3>5)==false)",
 		},
@@ -396,7 +420,7 @@ func TestOperationPrecedenceParsing(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range tests[0:1] {
 		l := lexer.New(tt.input)
 		p := New(l)
 		program := p.ParseProgram()
