@@ -25,13 +25,30 @@ func decIdent() {
 	traceLevel = traceLevel - 1
 }
 
-func trace(msg string) string {
+func trace(msg string, vars map[string]string) string {
 	incIdent()
-	tracePrint("BEGIN " + msg)
+	paramsMsg := ""
+
+	for k, v := range vars {
+		paramsMsg += k + ": " + v + ","
+	}
+
+	tracePrint("BEGIN " + msg + "," + paramsMsg)
 	return msg
 }
 
 func untrace(msg string) {
 	tracePrint("END " + msg)
 	decIdent()
+}
+
+func print(msg string, vars map[string]string) string {
+	paramsMsg := ""
+
+	for k, v := range vars {
+		paramsMsg += k + ": " + v + ","
+	}
+
+	tracePrint("BEGIN " + msg + "," + paramsMsg)
+	return msg
 }

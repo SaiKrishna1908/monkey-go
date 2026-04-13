@@ -54,6 +54,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 
 	p.infixPraseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -73,7 +74,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	defer untrace(trace("parseProgram"))
+	defer untrace(trace("parseProgram", nil))
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
@@ -90,7 +91,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	defer untrace(trace("parseStatement"))
+	defer untrace(trace("parseStatement", nil))
 
 	switch p.curToken.Type {
 	case token.LET:
@@ -103,7 +104,7 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
-	defer untrace(trace("parseLetStatement"))
+	defer untrace(trace("parseLetStatement", nil))
 	stmt := &ast.LetStatement{Token: p.curToken}
 
 	if !p.expectPeek(token.IDENT) {
@@ -124,7 +125,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 }
 
 func (p *Parser) parseReturnStatement() ast.Statement {
-	defer untrace(trace("parseReturnStatement"))
+	defer untrace(trace("parseReturnStatement", nil))
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 
 	for !p.curTokenIs(token.SEMICOLON) {
@@ -135,7 +136,7 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpressionStatement() ast.Statement {
-	defer untrace(trace("parseExpressionStatement"))
+	defer untrace(trace("parseExpressionStatement", nil))
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 
 	stmt.Expression = p.parseExpression(LOWEST)
@@ -154,7 +155,7 @@ type (
 )
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	defer untrace(trace("parseExpression"))
+	defer untrace(trace("parseExpression", map[string]string{"precedence": strconv.Itoa(precedence), "currentTokenType": string(p.curToken.Type)}))
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.noPrefixPraseFnError(p.curToken.Type)
@@ -163,7 +164,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := prefix()
 
+	// Keep parsing while next operator has higher precedence than current level
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecendence() {
+		print("parseExpressionForLoop", map[string]string{"leftExp": string(leftExp.String())})
 		infix := p.infixPraseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -176,12 +179,12 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
-	defer untrace(trace("parseIdentifier"))
+	defer untrace(trace("parseIdentifier", nil))
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	defer untrace(trace("parseIntegerLiteral"))
+	defer untrace(trace("parseIntegerLiteral", nil))
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
@@ -197,7 +200,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	defer untrace(trace("parsePrefixExpression"))
+	defer untrace(trace("parsePrefixExpression", nil))
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -225,20 +228,20 @@ func (p *Parser) currentPrecendence() int {
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	defer untrace(trace("parseInfixExpression"))
+	defer untrace(trace("parseInfixExpression", map[string]string{"leftExp": string(left.String())}))
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
 		Left:     left,
 	}
 
-	precedence := p.currentPrecendence()
+	leftPrecedence := p.currentPrecendence()
 	p.nextToken()
-	expression.Right = p.parseExpression(precedence)
+	expression.Right = p.parseExpression(leftPrecedence)
 	return expression
 }
 
 func (p *Parser) parseBoolean() ast.Expression {
-	defer untrace(trace("parseBoolean"))
+	defer untrace(trace("parseBoolean", nil))
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
