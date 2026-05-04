@@ -2,11 +2,16 @@ package parser
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/saikrishna1908/monkey/ast"
 	"github.com/saikrishna1908/monkey/lexer"
 )
+
+func init() {
+	os.Setenv("MONKEY_DEBUG", "true")
+}
 
 func TestLetStatements(t *testing.T) {
 	input := `
