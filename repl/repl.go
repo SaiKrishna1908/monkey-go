@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/saikrishna1908/monkey/lexer"
-	"github.com/saikrishna1908/monkey/token"
+	"github.com/saikrishna1908/monkey/parser"
 )
 
 const PROMPT = ">>"
@@ -25,8 +25,24 @@ func Start(in io.Reader, out io.Writer) {
 		line := scanner.Text()
 		l := lexer.New(line)
 
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Printf("%+v\n", tok)
-		}
+		parse(l)
 	}
+}
+
+// TODO: this is just for testing REPL to check generated AST, revert it back
+func parse(l *lexer.Lexer) {
+	parser := parser.New(l)
+	program := parser.ParseProgram()
+
+	errors := parser.Errors()
+
+	if len(errors) > 0 {
+		fmt.Printf("parser has %d errors", len(errors))
+		for _, msg := range errors {
+			fmt.Printf("parser error: %q", msg)
+		}
+
+	}
+
+	fmt.Println(program.String())
 }

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -26,6 +27,10 @@ func decIdent() {
 }
 
 func trace(msg string, vars map[string]string) string {
+	if os.Getenv("MONKEY_DEBUG") != "true" {
+		return ""
+	}
+
 	incIdent()
 	paramsMsg := ""
 
@@ -38,6 +43,10 @@ func trace(msg string, vars map[string]string) string {
 }
 
 func untrace(msg string) {
+	if os.Getenv("MONKEY_DEBUG") != "true" {
+		return
+	}
+
 	tracePrint("END " + msg)
 	decIdent()
 }
